@@ -1769,7 +1769,9 @@ void associationBase::sendMessage(std::shared_ptr<const associationMessage> mess
     const std::shared_ptr<const dataSet> pPayload(message->getPayloadDataSetNoThrow());
     if(pPayload != nullptr)
     {
-        transferSyntax = pPayload->getString(0x2, 0, 0x10, 0, 0, "");
+		// This seems to be a bug, we need to use the negotiated transfer syntax, defaulting to implicit vr for now
+        //transferSyntax = pPayload->getString(0x2, 0, 0x10, 0, 0, "");
+        transferSyntax = "1.2.840.10008.1.2";
     }
 
     // Find the transfer syntax negotiated for the requested
@@ -1788,6 +1790,10 @@ void associationBase::sendMessage(std::shared_ptr<const associationMessage> mess
             presentationContextId = scanPresentationContexts->first;
             pPresentationContext = scanPresentationContexts->second.first;
             break;
+        }
+        else {
+            std::cout << message->getAbstractSyntax() << " | " << scanPresentationContexts->second.first->m_abstractSyntax << std::endl;
+            std::cout << transferSyntax << " | " << scanPresentationContexts->second.second << std::endl;
         }
     }
 
