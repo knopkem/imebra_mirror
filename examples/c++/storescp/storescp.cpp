@@ -35,13 +35,13 @@ int main(int argc, char* argv[])
 	imebra::StreamWriter writeSCU(tcpStream.getStreamOutput());
 
 	// Specify which presentation contexts we accept
-	imebra::PresentationContext context("1.2.840.10008.1.2");
-	context.addTransferSyntax("1.2.840.10008.5.1.4.1.1.4");
+	imebra::PresentationContext context("1.2.840.10008.5.1.4.1.1.4");
+	context.addTransferSyntax("1.2.840.10008.1.2");
 	imebra::PresentationContexts presentationContexts;
 	presentationContexts.addPresentationContext(context);
 
 	// The AssociationSCP constructor will negotiate the assocation
-	imebra::AssociationSCP scp("CONQUESTSRV1", 1, 1, presentationContexts, readSCU, writeSCU, 0, 10);
+	imebra::AssociationSCP scp("", 1, 1, presentationContexts, readSCU, writeSCU, 0, 10);
 
 	// Receive commands via the dimse service
 	imebra::DimseService dimse(scp);
@@ -62,13 +62,15 @@ int main(int argc, char* argv[])
 			// Do something with the payload
 			std::cout << "payload received" << std::endl;
 
+			imebra::CodecFactory::save(payload, "dicomFile.dcm", imebra::codecType_t::dicom);
+
 			// Send a response
 			dimse.sendCommandOrResponse(CStoreResponse(command, dimseStatusCode_t::success));
 		}
 	}
-	catch(const StreamEOFError&)
+	catch(const StreamEOFError& error)
 	{
 		// The association has been closed
-		std::cout << "stream error" << std::endl;
+		std::cout << "stream error: " << error.what() << std::endl;
 	}
 }

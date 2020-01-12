@@ -393,6 +393,19 @@ endif()
 
     ##############################################
     #
+    # MOVESCU example
+    #
+    ##############################################
+    file(GLOB movescu_sources "${CMAKE_CURRENT_SOURCE_DIR}/examples/c++/movescu/*.cpp")
+
+    # Add the source files to the project
+    #------------------------------------
+    add_executable(movescu ${movescu_sources})
+
+    target_link_libraries(movescu imebra)
+
+    ##############################################
+    #
     # STORESCU example
     #
     ##############################################

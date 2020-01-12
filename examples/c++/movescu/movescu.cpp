@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 	// Add all the abstract syntaxes and the supported transfer
 	// syntaxes for each abstract syntax (the pair abstract/transfer syntax is
 	// called "presentation context")
-	imebra::PresentationContext context("1.2.840.10008.5.1.4.1.1.4"); // MR Image Storage
+	imebra::PresentationContext context(uidStudyRootQueryRetrieveInformationModelMOVE_1_2_840_10008_5_1_4_1_2_2_2); // move
 	context.addTransferSyntax("1.2.840.10008.1.2"); // Implicit VR little endian
 	imebra::PresentationContexts presentationContexts;
 	presentationContexts.addPresentationContext(context);
@@ -50,31 +50,29 @@ int main(int argc, char* argv[])
 	imebra::DimseService dimse(scu);
 
 	// Let's prepare a dataset to store on the SCP
-	DataSet payload = CodecFactory::load("c:/dicom/samplemr.dcm");
-	std::cout << payload.getString(TagId(tagId_t::SOPClassUID_0008_0016),0) << std::endl;
+	imebra::MutableDataSet payload; // We will use the negotiated transfer syntax
+	payload.setString(TagId(imebra::tagId_t::QueryRetrieveLevel_0008_0052), "STUDY", imebra::tagVR_t::CS);
+	payload.setString(TagId(tagId_t::StudyInstanceUID_0020_000D), "1.3.46.670589.11.0.1.1996082307380006", imebra::tagVR_t::UI);
+	const std::string abstractSyntax = uidStudyRootQueryRetrieveInformationModelMOVE_1_2_840_10008_5_1_4_1_2_2_2;
 
-
-	imebra::CStoreCommand command(
-				"1.2.840.10008.5.1.4.1.1.4", //< one of the negotiated abstract syntaxes
-				dimse.getNextCommandID(),
-				dimseCommandPriority_t::medium,
-				payload.getString(TagId(tagId_t::SOPClassUID_0008_0016), 0),
-				payload.getString(TagId(tagId_t::SOPInstanceUID_0008_0018), 0),
-				"",
-				0,
-				payload);
+	imebra::CMoveCommand command( abstractSyntax,
+		dimse.getNextCommandID(),
+		dimseCommandPriority_t::medium,
+		uidStudyRootQueryRetrieveInformationModelMOVE_1_2_840_10008_5_1_4_1_2_2_2,
+		"IMEBRA",
+		payload);
 	dimse.sendCommandOrResponse(command);
+
 	try
 	{
-		imebra::DimseResponse response(dimse.getCStoreResponse(command));
-
-		if(response.getStatus() == imebra::dimseStatus_t::success)
+		imebra::DimseResponse response(dimse.getCMoveResponse(command));
+		if (response.getStatus() == imebra::dimseStatus_t::success)
 		{
-			std::cout << "store success" << std::endl;
+			std::cout << "move success" << std::endl;
 			// SUCCESS!
 		}
 		else {
-			std::cout << "store failure" << std::endl;
+			std::cout << "move failure" << std::endl;
 		}
 	}
 	catch (const StreamEOFError & error)
@@ -82,4 +80,6 @@ int main(int argc, char* argv[])
 		// The association has been closed
 		std::cout << "stream error: " << error.what() << std::endl;
 	}
+
+
 }
